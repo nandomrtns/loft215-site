@@ -354,6 +354,14 @@ h2 {
 
 /* ---------- Galeria (grid genérico, usado no apto e nas comodidades) ---------- */
 
+.gallery-subhead {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 500;
+  margin: 48px 0 4px;
+}
+.gallery-subhead:first-of-type { margin-top: 40px; }
+
 .gallery-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
