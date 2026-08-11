@@ -525,6 +525,59 @@ figcaption {
   .review-card { flex-basis: 260px; }
 }
 
+/* ---------- Disponibilidade ---------- */
+
+.cal-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 40px;
+  margin-top: 32px;
+}
+
+.cal-loading { font-size: 14px; color: rgba(27,20,17,0.6); }
+
+.cal-month { flex: 1 1 260px; max-width: 320px; }
+.cal-month h4 {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 500;
+  margin-bottom: 14px;
+}
+
+.cal-weekdays, .cal-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.cal-weekdays span {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(27,20,17,0.5);
+  text-align: center;
+  padding-bottom: 8px;
+}
+
+.cal-day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1 / 1;
+  font-size: 13px;
+  border-radius: 8px;
+}
+
+.cal-day.free { background: var(--cream-2); color: var(--ink); }
+.cal-day.booked { background: transparent; color: rgba(27,20,17,0.32); text-decoration: line-through; }
+.cal-day.past { color: rgba(27,20,17,0.2); }
+.cal-day.empty { background: transparent; }
+
+.cal-updated {
+  margin-top: 24px;
+  font-size: 12px;
+  color: rgba(27,20,17,0.5);
+}
+
 /* ---------- Contato ---------- */
 
 .contact { text-align: center; }

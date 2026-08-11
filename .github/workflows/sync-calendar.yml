@@ -1,0 +1,36 @@
+name: Sync Airbnb calendar
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch calendar and rebuild availability.json
+        env:
+          AIRBNB_ICS_URL: ${{ secrets.AIRBNB_ICS_URL }}
+        run: python3 scripts/sync_calendar.py
+
+      - name: Commit if changed
+        run: |
+          git config user.name "studio215-bot"
+          git config user.email "actions@github.com"
+          if ! git diff --quiet -- assets/availability.json; then
+            git add assets/availability.json
+            git commit -m "Sync calendario Airbnb [automatico]"
+            git push
+          else
+            echo "Sem mudanca na disponibilidade."
+          fi
