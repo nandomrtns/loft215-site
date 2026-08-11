@@ -20,21 +20,47 @@
 <body>
 
 <header class="site-header" id="siteHeader">
-  <div class="header-brand">
+  <a class="header-brand" href="#">
     <img src="assets/img/logo.png" alt="Loft 215">
     <span class="brand-name">Loft 215</span>
+  </a>
+
+  <div class="header-pill">
+    <nav class="header-nav">
+      <a href="#galeria">Galeria</a>
+      <a href="#comodidades">Comodidades</a>
+      <a href="#localizacao">Localização</a>
+      <a href="#avaliacoes">Avaliações</a>
+    </nav>
   </div>
-  <nav class="header-nav">
-    <a href="#galeria">Galeria</a>
-    <a href="#comodidades">Comodidades</a>
-    <a href="#localizacao">Localização</a>
-    <a href="#avaliacoes">Avaliações</a>
-  </nav>
-  <a class="header-cta" href="#contato">Reservar direto</a>
+
+  <div class="header-right">
+    <a class="header-cta" href="#contato">Reservar direto</a>
+    <button class="header-burger" id="headerBurger" aria-label="Abrir menu" aria-expanded="false">
+      <span></span><span></span>
+    </button>
+  </div>
 </header>
 
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#galeria">Galeria</a>
+  <a href="#comodidades">Comodidades</a>
+  <a href="#localizacao">Localização</a>
+  <a href="#avaliacoes">Avaliações</a>
+  <a href="#contato" class="btn btn-primary" style="margin-top:12px;">Reservar direto</a>
+</div>
+
 <section class="hero">
-  <img src="assets/img/hero.jpg" alt="Studio do Loft 215, com cama queen, mesa de jantar e cozinha integrada">
+  <div class="hero-rotator" id="heroRotator">
+    <img class="hero-bg-img" src="assets/img/hero-rotation/1.jpg" alt="Studio do Loft 215, com cama queen, mesa de jantar e cozinha integrada">
+    <img class="hero-bg-img" src="assets/img/hero-rotation/2.jpg" alt="Cama do Loft 215 vista de frente">
+    <img class="hero-bg-img" src="assets/img/hero-rotation/3.jpg" alt="Mesa de jantar do Loft 215 com Smart TV">
+    <img class="hero-bg-img" src="assets/img/hero-rotation/4.jpg" alt="Cozinha equipada do Loft 215">
+    <img class="hero-bg-img" src="assets/img/hero-rotation/5.jpg" alt="Fachada do edifício Skyline Moinhos vista do alto">
+    <img class="hero-bg-img" src="assets/img/hero-rotation/6.jpg" alt="Piscina de borda infinita no rooftop">
+    <img class="hero-bg-img" src="assets/img/hero-rotation/7.jpg" alt="Espaço gourmet do rooftop ao pôr do sol">
+    <img class="hero-bg-img" src="assets/img/hero-rotation/8.jpg" alt="Chuveiro de pressão do Loft 215">
+  </div>
   <div class="hero-content">
     <div class="wrap" style="padding:0;">
       <p class="hero-kicker">Skyline Moinhos · Moinhos de Vento · Porto Alegre</p>

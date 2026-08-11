@@ -3,6 +3,34 @@ window.addEventListener('scroll', () => {
   header.classList.toggle('scrolled', window.scrollY > 40);
 });
 
+// Menu mobile
+const burger = document.getElementById('headerBurger');
+const mobileMenu = document.getElementById('mobileMenu');
+if (burger && mobileMenu) {
+  burger.addEventListener('click', () => {
+    const open = mobileMenu.classList.toggle('open');
+    burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  mobileMenu.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => {
+      mobileMenu.classList.remove('open');
+      burger.setAttribute('aria-expanded', 'false');
+    });
+  });
+}
+
+// Carrossel da hero — Ken Burns + crossfade, 2s por foto
+const heroImgs = document.querySelectorAll('.hero-bg-img');
+if (heroImgs.length) {
+  let heroIdx = 0;
+  const showHeroSlide = () => {
+    heroImgs.forEach((img, i) => img.classList.toggle('active', i === heroIdx));
+    heroIdx = (heroIdx + 1) % heroImgs.length;
+  };
+  showHeroSlide();
+  setInterval(showHeroSlide, 2000);
+}
+
 const lightbox = document.getElementById('lightbox');
 const lightboxImg = document.getElementById('lightboxImg');
 const lightboxClose = document.getElementById('lightboxClose');
