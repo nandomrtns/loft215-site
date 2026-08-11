@@ -14,14 +14,23 @@
 <link rel="icon" type="image/png" href="assets/img/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Karla:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
 
 <header class="site-header" id="siteHeader">
-  <img src="assets/img/logo.png" alt="Loft 215">
-  <span>Loft 215</span>
+  <div class="header-brand">
+    <img src="assets/img/logo.png" alt="Loft 215">
+    <span class="brand-name">Loft 215</span>
+  </div>
+  <nav class="header-nav">
+    <a href="#galeria">Galeria</a>
+    <a href="#comodidades">Comodidades</a>
+    <a href="#localizacao">Localização</a>
+    <a href="#avaliacoes">Avaliações</a>
+  </nav>
+  <a class="header-cta" href="#contato">Reservar direto</a>
 </header>
 
 <section class="hero">
@@ -31,6 +40,14 @@
       <p class="hero-kicker">Skyline Moinhos · Moinhos de Vento · Porto Alegre</p>
       <h1>Loft 215</h1>
       <p>Um studio de 25m² pensado para o repouso de verdade — silêncio, conforto e acabamento, a poucos passos do Parcão.</p>
+      <div class="hero-trust">
+        <span class="stars">★★★★★</span>
+        <span>5.0</span>
+        <span class="sep">·</span>
+        <span class="plain">14 avaliações no Airbnb</span>
+        <span class="sep">·</span>
+        <span class="plain">Preferido dos hóspedes</span>
+      </div>
     </div>
   </div>
 </section>
@@ -63,7 +80,7 @@
     <p class="section-tag">Estudo visual</p>
     <h2>Cada detalhe, do jeito que está</h2>
     <p class="lede">As fotos abaixo são do apartamento real — nada de still de banco de imagens.</p>
-    <div class="gallery-grid" style="margin-top:40px;">
+    <div class="gallery-grid">
       <figure class="wide"><a href="assets/img/kitchen.jpg" class="lb-trigger"><img src="assets/img/kitchen.jpg" alt="Cozinha equipada do Loft 215" loading="lazy"><figcaption>Cozinha completa</figcaption></a></figure>
       <figure><a href="assets/img/shower.jpg" class="lb-trigger"><img src="assets/img/shower.jpg" alt="Chuveiro de pressão do Loft 215" loading="lazy"><figcaption>Ducha padrão hotel</figcaption></a></figure>
       <figure><a href="assets/img/bathroom.jpg" class="lb-trigger"><img src="assets/img/bathroom.jpg" alt="Banheiro do Loft 215" loading="lazy"><figcaption>Banheiro</figcaption></a></figure>
@@ -74,22 +91,30 @@
   </div>
 </section>
 
-<section class="amenities" id="comodidades">
-  <div class="wrap amenities">
-    <div class="amenities-img">
-      <img src="assets/img/rooftop.jpg" alt="Rooftop do edifício Skyline Moinhos, com churrasqueira e mesa comunitária">
-    </div>
-    <div>
-      <p class="section-tag">Comodidades do prédio</p>
-      <h2>Um dos poucos lugares da região com piscina</h2>
-      <p class="lede">O acesso do hóspede é completo às áreas comuns do Skyline Moinhos, com portaria e elevadores modernos.</p>
+<section id="comodidades">
+  <div class="wrap">
+    <div class="amenities-intro">
+      <div>
+        <p class="section-tag">Comodidades do prédio</p>
+        <h2>Um dos poucos lugares da região com piscina</h2>
+        <p class="lede">O acesso do hóspede é completo às áreas comuns do Skyline Moinhos, com portaria e elevadores modernos.</p>
+      </div>
       <ul class="amenities-list">
-        <li>Piscina externa, disponível o ano todo</li>
+        <li>Piscina externa de borda infinita, disponível o ano todo</li>
         <li>Academia com esteira e halteres</li>
+        <li>Espaços de convivência — lounge, coworking e rooftop</li>
         <li>Estacionamento gratuito — 1 vaga</li>
         <li>Lavanderia compartilhada</li>
         <li>Permitido animais de estimação</li>
       </ul>
+    </div>
+    <div class="gallery-grid">
+      <figure class="wide"><a href="assets/img/pool.jpg" class="lb-trigger"><img src="assets/img/pool.jpg" alt="Piscina de borda infinita no rooftop do Skyline Moinhos, com vista para Porto Alegre" loading="lazy"><figcaption>Piscina infinita no rooftop</figcaption></a></figure>
+      <figure><a href="assets/img/bbq-sunset.jpg" class="lb-trigger"><img src="assets/img/bbq-sunset.jpg" alt="Espaço gourmet com churrasqueira no rooftop, ao pôr do sol" loading="lazy"><figcaption>Espaço gourmet</figcaption></a></figure>
+      <figure><a href="assets/img/lounge-nook.jpg" class="lb-trigger"><img src="assets/img/lounge-nook.jpg" alt="Cantinho de estar no rooftop, com estrutura em corten" loading="lazy"><figcaption>Lounge do rooftop</figcaption></a></figure>
+      <figure><a href="assets/img/coworking.jpg" class="lb-trigger"><img src="assets/img/coworking.jpg" alt="Espaço de coworking compartilhado do prédio" loading="lazy"><figcaption>Coworking</figcaption></a></figure>
+      <figure><a href="assets/img/social-lounge.jpg" class="lb-trigger"><img src="assets/img/social-lounge.jpg" alt="Salão de convivência do prédio, com bancada e estar" loading="lazy"><figcaption>Salão de convivência</figcaption></a></figure>
+      <figure class="wide"><a href="assets/img/pet-park.jpg" class="lb-trigger"><img src="assets/img/pet-park.jpg" alt="Pet park do edifício, para quem viaja com animais" loading="lazy"><figcaption>Pet park</figcaption></a></figure>
     </div>
   </div>
 </section>
