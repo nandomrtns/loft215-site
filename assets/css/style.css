@@ -52,7 +52,6 @@ h1, h2, h3 { font-family: var(--font-display); }
 }
 .site-header img {
   width: 42px; height: auto;
-  filter: drop-shadow(0 1px 6px rgba(0,0,0,0.3));
 }
 
 .sr-only {
@@ -271,7 +270,8 @@ h1, h2, h3 { font-family: var(--font-display); }
   font-weight: 700;
   color: var(--cream);
 }
-.hero-trust .stars { color: var(--terracotta); letter-spacing: 1px; }
+.hero-trust .stars { display: inline-flex; gap: 2px; vertical-align: middle; }
+.hero-trust .stars svg { width: 13px; height: 13px; fill: var(--terracotta); }
 .hero-trust .sep { opacity: 0.5; font-weight: 400; }
 .hero-trust .plain { font-weight: 400; opacity: 0.85; }
 
@@ -467,11 +467,11 @@ figcaption {
   gap: 14px;
   margin: 4px 0 14px;
 }
-.laurel { width: 30px; height: auto; flex-shrink: 0; }
+.laurel { width: 44px; height: auto; flex-shrink: 0; filter: drop-shadow(0 2px 3px rgba(138,101,18,0.35)); }
 .laurel-r { transform: scaleX(-1); }
 .laurel-badge .num {
   font-family: var(--font-display);
-  font-size: 52px;
+  font-size: 60px;
   font-weight: 500;
   line-height: 1;
 }
@@ -496,8 +496,6 @@ figcaption {
   padding: 4px 32px 48px;
   animation: marquee-scroll 46s linear infinite;
 }
-
-.marquee:hover .marquee-track { animation-play-state: paused; }
 
 @keyframes marquee-scroll {
   from { transform: translateX(0); }
