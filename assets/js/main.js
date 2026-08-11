@@ -28,7 +28,7 @@ if (heroImgs.length) {
     heroIdx = (heroIdx + 1) % heroImgs.length;
   };
   showHeroSlide();
-  setInterval(showHeroSlide, 2000);
+  setInterval(showHeroSlide, 4000);
 }
 
 const lightbox = document.getElementById('lightbox');

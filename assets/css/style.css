@@ -209,18 +209,13 @@ h1, h2, h3 { font-family: var(--font-display); }
   height: 100%;
   object-fit: cover;
   opacity: 0;
-  transform: scale(1);
-  transition: opacity 1s ease;
+  transform: scale(1.01);
+  transition: opacity 1.8s ease, transform 6.5s ease-out;
 }
 
 .hero-bg-img.active {
   opacity: 0.94;
-  animation: heroKenBurns 2.6s ease-out forwards;
-}
-
-@keyframes heroKenBurns {
-  from { transform: scale(1); }
-  to { transform: scale(1.09); }
+  transform: scale(1.1);
 }
 
 .hero::after {
