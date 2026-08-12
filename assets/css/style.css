@@ -518,7 +518,16 @@ figcaption {
   font-size: 14px;
   margin-bottom: 14px;
 }
-.review-card p { font-size: 14px; color: rgba(27,20,17,0.85); margin-bottom: 12px; min-height: 66px; }
+.review-card p {
+  font-size: 14px;
+  color: rgba(27,20,17,0.85);
+  margin-bottom: 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 66px;
+}
 .review-card .who { display: block; font-family: var(--font-body); font-size: 12px; color: var(--sage-dark); font-weight: 700; letter-spacing: 0.02em; }
 
 @media (max-width: 640px) {
