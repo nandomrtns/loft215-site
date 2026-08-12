@@ -51,6 +51,14 @@ h1, h2, h3 { font-family: var(--font-display); }
   padding: 22px 24px;
   margin: 0 auto;
   pointer-events: none;
+  transition: max-width 0.5s cubic-bezier(0.4,0,0.2,1), padding 0.5s ease;
+}
+
+@media (min-width: 900px) {
+  .site-header.scrolled {
+    max-width: 920px;
+    padding: 14px 24px;
+  }
 }
 
 .site-header > * { pointer-events: auto; }
