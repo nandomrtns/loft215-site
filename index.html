@@ -27,10 +27,10 @@
 
   <div class="header-pill">
     <nav class="header-nav">
+      <a href="#avaliacoes">Avaliações</a>
       <a href="#galeria">Galeria</a>
       <a href="#comodidades">Comodidades</a>
       <a href="#localizacao">Localização</a>
-      <a href="#avaliacoes">Avaliações</a>
       <a href="#disponibilidade">Disponibilidade</a>
     </nav>
   </div>
@@ -44,10 +44,10 @@
 </header>
 
 <div class="mobile-menu" id="mobileMenu">
+  <a href="#avaliacoes">Avaliações</a>
   <a href="#galeria">Galeria</a>
   <a href="#comodidades">Comodidades</a>
   <a href="#localizacao">Localização</a>
-  <a href="#avaliacoes">Avaliações</a>
   <a href="#contato" class="btn btn-primary" style="margin-top:12px;">Reservar direto</a>
 </div>
 
@@ -219,7 +219,10 @@
 
     <h3 class="gallery-subhead">Banheiro</h3>
     <div class="gallery-grid">
-      <figure><a href="assets/img/bathroom.jpg" class="lb-trigger"><img src="assets/img/bathroom.jpg" alt="Banheiro do Studio 215" loading="lazy"><figcaption>Banheiro</figcaption></a></figure>
+      <figure class="wide"><a href="assets/img/bathroom-wide.jpg" class="lb-trigger"><img src="assets/img/bathroom-wide.jpg" alt="Banheiro completo do Studio 215, com pia, espelho e box de vidro" loading="lazy"><figcaption>Banheiro completo</figcaption></a></figure>
+      <figure><a href="assets/img/bathroom-sink.jpg" class="lb-trigger"><img src="assets/img/bathroom-sink.jpg" alt="Bancada e pia do banheiro, com toalhas e amenities" loading="lazy"><figcaption>Bancada e pia</figcaption></a></figure>
+      <figure><a href="assets/img/bathroom-toilet.jpg" class="lb-trigger"><img src="assets/img/bathroom-toilet.jpg" alt="Vaso sanitário com prateleira de toalhas" loading="lazy"><figcaption>Vaso sanitário</figcaption></a></figure>
+      <figure><a href="assets/img/bathroom-bidet.jpg" class="lb-trigger"><img src="assets/img/bathroom-bidet.jpg" alt="Ducha higiênica do banheiro" loading="lazy"><figcaption>Ducha higiênica</figcaption></a></figure>
       <figure><a href="assets/img/shower.jpg" class="lb-trigger"><img src="assets/img/shower.jpg" alt="Chuveiro de pressão do Studio 215" loading="lazy"><figcaption>Ducha padrão hotel</figcaption></a></figure>
     </div>
   </div>
@@ -274,12 +277,59 @@
 <section id="disponibilidade">
   <div class="wrap">
     <p class="section-tag">Calendário</p>
-    <h2>Disponibilidade real, direto do Airbnb</h2>
-    <p class="lede">Sincronizado automaticamente algumas vezes por dia. Datas em cinza já estão reservadas.</p>
+    <h2>Escolha suas datas</h2>
+    <p class="lede">Disponibilidade combinada com o Airbnb, sincronizada automaticamente. Selecione a data de entrada e depois a de saída.</p>
+    <div class="cal-nav" id="calNav" hidden>
+      <button type="button" class="cal-nav-btn" id="calPrev" aria-label="Mês anterior">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <button type="button" class="cal-nav-btn" id="calNext" aria-label="Próximo mês">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </div>
     <div class="cal-grid" id="calGrid">
       <p class="cal-loading">Carregando disponibilidade...</p>
     </div>
     <p class="cal-updated" id="calUpdated"></p>
+
+    <div class="booking-summary" id="bookingSummary" hidden></div>
+
+    <form class="guest-form" id="guestForm" hidden>
+      <div class="form-field">
+        <label for="guestName">Nome completo</label>
+        <input type="text" id="guestName" name="guestName" required minlength="2" autocomplete="name">
+      </div>
+      <div class="form-field two-up">
+        <div class="form-field">
+          <label for="guestEmail">E-mail</label>
+          <input type="email" id="guestEmail" name="guestEmail" required autocomplete="email">
+        </div>
+        <div class="form-field">
+          <label for="guestPhone">Telefone</label>
+          <input type="tel" id="guestPhone" name="guestPhone" required autocomplete="tel" placeholder="+55 51 99999-9999">
+        </div>
+      </div>
+      <div class="form-field two-up">
+        <div class="form-field">
+          <label for="guestDocument">CPF</label>
+          <input type="text" id="guestDocument" name="guestDocument" required inputmode="numeric" placeholder="000.000.000-00">
+        </div>
+        <div class="form-field">
+          <label for="guestCount">Hóspedes</label>
+          <select id="guestCount" name="guestCount" required>
+            <option value="1">1</option>
+            <option value="2" selected>2</option>
+            <option value="3">3</option>
+          </select>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary">Solicitar reserva</button>
+      <p class="booking-note" id="bookingNote" hidden></p>
+    </form>
+
+    <p class="booking-error" id="bookingError" hidden></p>
+
+    <div class="booking-confirmation" id="bookingConfirmation" hidden></div>
   </div>
 </section>
 
@@ -306,5 +356,6 @@
 </div>
 
 <script src="assets/js/main.js"></script>
+<script src="assets/js/booking.js"></script>
 </body>
 </html>
