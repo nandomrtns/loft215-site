@@ -8,7 +8,7 @@ const API_BASE = 'https://studio215-booking-production.up.railway.app';
 // Chave PÚBLICA do Mercado Pago — seguro expor no cliente, é assim que o
 // MP.js funciona. Troca junto com MP_ACCESS_TOKEN/MP_WEBHOOK_SECRET do
 // backend quando sair do sandbox (TEST-... -> produção).
-const MP_PUBLIC_KEY = 'TEST-00000000-0000-0000-0000-000000000000';
+const MP_PUBLIC_KEY = 'TEST-0ff94593-13ce-423a-a37b-248ab77e4bf9';
 const PREVIEW_MODE = new URLSearchParams(window.location.search).has('preview');
 const MONTHS_SHOWN = 2;
 const MAX_MONTH_OFFSET = 10; // janela navegável de 12 meses (offset + MONTHS_SHOWN)
