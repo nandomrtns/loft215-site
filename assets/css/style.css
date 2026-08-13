@@ -21,6 +21,14 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* overflow-x precisa estar no html E no body — Safari iOS ignora o do body
+   sozinho quando algum elemento estoura a largura da tela (causa o "gap"
+   estranho na lateral e o bounce horizontal). */
+html {
+  overflow-x: hidden;
+  width: 100%;
+}
+
 body {
   font-family: var(--font-body);
   background: var(--cream);
@@ -28,6 +36,7 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  width: 100%;
 }
 
 img { max-width: 100%; display: block; }
@@ -51,14 +60,6 @@ h1, h2, h3 { font-family: var(--font-display); }
   padding: 22px 24px;
   margin: 0 auto;
   pointer-events: none;
-  transition: max-width 0.5s cubic-bezier(0.4,0,0.2,1), padding 0.5s ease;
-}
-
-@media (min-width: 900px) {
-  .site-header.scrolled {
-    max-width: 920px;
-    padding: 14px 24px;
-  }
 }
 
 .site-header > * { pointer-events: auto; }
@@ -510,7 +511,11 @@ figcaption {
   gap: 20px;
   width: max-content;
   padding: 4px 32px 48px;
-  animation: marquee-scroll 46s linear infinite;
+  animation: marquee-scroll 100s linear infinite;
+}
+
+.marquee:hover .marquee-track {
+  animation-duration: 260s;
 }
 
 @keyframes marquee-scroll {
@@ -875,6 +880,9 @@ figcaption {
   color: rgba(27,20,17,0.7);
 }
 .form-field input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   font-family: var(--font-body);
   font-size: 15px;
   padding: 11px 14px;
@@ -889,7 +897,13 @@ figcaption {
   border-color: var(--sage);
 }
 .form-field.two-up { flex-direction: row; gap: 14px; }
-.form-field.two-up > * { flex: 1; }
+.form-field.two-up > * { flex: 1; min-width: 0; }
+
+@media (max-width: 640px) {
+  /* Empilha os campos no mobile — lado a lado fica apertado demais e
+     estourava a largura da tela (o campo de telefone era o mais visível). */
+  .form-field.two-up { flex-direction: column; gap: 14px; }
+}
 
 .booking-note {
   margin-top: 12px;
@@ -1007,6 +1021,9 @@ footer p { font-family: var(--font-body); font-size: 12px; color: rgba(27,20,17,
   section { padding: 72px 0; }
   .wrap { padding: 0 20px; }
   .facts { grid-template-columns: 1fr; }
+  /* Tela estreita = mesma velocidade em px/s parece muito mais rápida
+     (o card ocupa muito mais da largura visível), por isso bem mais lento aqui. */
+  .marquee-track { animation-duration: 240s; }
 }
 
 /* ---------- Movimento reduzido ---------- */
