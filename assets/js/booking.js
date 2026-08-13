@@ -1,9 +1,14 @@
 // Widget de disponibilidade estilo Airbnb: card compacto (check-in/checkout/
 // hóspedes) que abre um modal com o calendário navegável ao clicar. O botão
-// final de reserva só funciona com ?preview=1 na URL (uso interno) até a
-// Fase 3 ligar o pagamento de verdade — ver booking-service para o motivo.
+// final de reserva só funciona com ?preview=1 na URL (uso interno) — mesmo
+// com o pagamento real ligado (Fase 3), esse gate continua até o Nando
+// destravar depois de um primeiro pagamento supervisionado.
 
 const API_BASE = 'https://studio215-booking-production.up.railway.app';
+// Chave PÚBLICA do Mercado Pago — seguro expor no cliente, é assim que o
+// MP.js funciona. Troca junto com MP_ACCESS_TOKEN/MP_WEBHOOK_SECRET do
+// backend quando sair do sandbox (TEST-... -> produção).
+const MP_PUBLIC_KEY = 'TEST-00000000-0000-0000-0000-000000000000';
 const PREVIEW_MODE = new URLSearchParams(window.location.search).has('preview');
 const MONTHS_SHOWN = 2;
 const MAX_MONTH_OFFSET = 10; // janela navegável de 12 meses (offset + MONTHS_SHOWN)
@@ -12,6 +17,7 @@ const MAX_GUESTS = 3;
 const MONTH_NAMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const WEEKDAYS = ['D','S','T','Q','Q','S','S'];
 const RESERVATION_ID_KEY = 'studio215_reservation_id';
+const PAYMENT_POLL_INTERVAL_MS = 4000;
 
 const bookingWidget = document.getElementById('bookingWidget');
 const bookingWidgetTitle = document.getElementById('bookingWidgetTitle');
@@ -53,6 +59,8 @@ let minNights = 2;
 let selection = { start: null, end: null };
 let guestCount = 1;
 let monthOffset = 0;
+let paymentPollTimer = null;
+let cardBrickController = null;
 
 if (calGrid) {
   initBooking();
@@ -93,11 +101,22 @@ async function tryRestoreReservation() {
       return false;
     }
     const reservation = await res.json();
+
+    if (reservation.status === 'confirmed') {
+      renderConfirmedSuccess(reservation);
+      return true;
+    }
     if (reservation.status !== 'pending') {
       sessionStorage.removeItem(RESERVATION_ID_KEY);
       return false;
     }
-    renderConfirmation(reservation);
+
+    renderPaymentChoice(reservation);
+    // Já tinha um Pix em andamento (ex.: hóspede recarregou a página com o
+    // QR aberto) — reabre a tela do QR direto em vez de voltar pra escolha.
+    if (reservation.paymentMethod === 'pix' && ['pending', 'in_process'].includes(reservation.mpPaymentStatus)) {
+      startPixPayment(reservation);
+    }
     return true;
   } catch (err) {
     return false;
@@ -484,7 +503,7 @@ if (guestForm) {
       }
 
       sessionStorage.setItem(RESERVATION_ID_KEY, body.id);
-      renderConfirmation(body);
+      renderPaymentChoice(body);
     } catch (err) {
       showError('Não consegui enviar a pré-reserva agora. Tenta de novo em instantes.');
       submitBtn.disabled = false;
@@ -492,7 +511,63 @@ if (guestForm) {
   });
 }
 
-function renderConfirmation(reservation) {
+// ---------- Pagamento (Fase 3) ----------
+
+function paymentErrorMessage(body) {
+  if (body.error === 'reserva_nao_pendente') return 'Essa pré-reserva não está mais disponível pra pagamento.';
+  if (body.error === 'reserva_expirada') return 'Essa pré-reserva expirou. Escolha as datas de novo pra tentar outra vez.';
+  if (body.error === 'validacao') return 'Confira os dados do pagamento.';
+  if (body.error === 'falha_mercado_pago') return 'O Mercado Pago não respondeu agora. Tenta de novo em instantes.';
+  return 'Não consegui processar o pagamento agora. Tenta de novo em instantes.';
+}
+
+function stopPaymentPolling() {
+  if (paymentPollTimer) {
+    clearInterval(paymentPollTimer);
+    paymentPollTimer = null;
+  }
+}
+
+function unmountCardBrick() {
+  if (cardBrickController) {
+    cardBrickController.unmount();
+    cardBrickController = null;
+  }
+}
+
+function showPaymentStatus(message, kind) {
+  const el = document.getElementById('paymentStatus');
+  if (!el) return;
+  el.hidden = !message;
+  el.textContent = message || '';
+  el.className = 'payment-status' + (kind ? ` is-${kind}` : '');
+}
+
+function setPaymentMethodButtonsDisabled(disabled) {
+  const pix = document.getElementById('choosePix');
+  const card = document.getElementById('chooseCard');
+  if (pix) pix.disabled = disabled;
+  if (card) card.disabled = disabled;
+}
+
+function renderPaymentBackButton(reservation) {
+  const panel = document.getElementById('paymentPanel');
+  if (!panel) return;
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'payment-back-btn';
+  btn.textContent = 'Escolher outro método de pagamento';
+  btn.addEventListener('click', () => {
+    stopPaymentPolling();
+    unmountCardBrick();
+    renderPaymentChoice(reservation);
+  });
+  panel.appendChild(btn);
+}
+
+function renderPaymentChoice(reservation) {
+  stopPaymentPolling();
+  unmountCardBrick();
   closeModal();
   if (bookingWidget) bookingWidget.hidden = true;
   if (guestForm) guestForm.hidden = true;
@@ -508,6 +583,245 @@ function renderConfirmation(reservation) {
     <p>${formatDateBR(reservation.checkIn)} — ${formatDateBR(reservation.checkOut)}</p>
     <p>Total: ${formatBRL(reservation.totalCents)}</p>
     <p>${reservation.cancellationPolicy.summary}</p>
-    <p>Sua pré-reserva fica guardada até ${expires.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.</p>
+    <p>Escolha como pagar até ${expires.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} pra garantir a data.</p>
+    <div class="payment-methods">
+      <button type="button" class="payment-method-btn" id="choosePix">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M7.5 7.5l2 2M14.5 14.5l2 2M16.5 7.5l-2 2M9.5 14.5l-2 2"/></svg>
+        Pix
+      </button>
+      <button type="button" class="payment-method-btn" id="chooseCard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+        Cartão de crédito
+      </button>
+    </div>
+    <div class="payment-panel" id="paymentPanel" hidden></div>
+    <p class="payment-status" id="paymentStatus" hidden></p>
   `;
+
+  const pixBtn = document.getElementById('choosePix');
+  const cardBtn = document.getElementById('chooseCard');
+  if (pixBtn) pixBtn.addEventListener('click', () => startPixPayment(reservation));
+  if (cardBtn) cardBtn.addEventListener('click', () => startCardPayment(reservation));
+}
+
+function renderConfirmedSuccess(reservation) {
+  stopPaymentPolling();
+  unmountCardBrick();
+  closeModal();
+  if (bookingWidget) bookingWidget.hidden = true;
+  if (guestForm) guestForm.hidden = true;
+  if (bookingNote) bookingNote.hidden = true;
+  clearError();
+
+  if (!bookingConfirmation) return;
+  bookingConfirmation.hidden = false;
+  bookingConfirmation.innerHTML = `
+    <h3>Reserva confirmada!</h3>
+    <p>${formatDateBR(reservation.checkIn)} — ${formatDateBR(reservation.checkOut)}</p>
+    <p>Total pago: ${formatBRL(reservation.totalCents)}</p>
+    <p>Confirmamos por e-mail. Qualquer coisa, chama no Instagram.</p>
+  `;
+}
+
+function pollPaymentStatus(reservationId) {
+  stopPaymentPolling();
+  paymentPollTimer = setInterval(async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/reservations/${reservationId}`);
+      if (!res.ok) return;
+      const reservation = await res.json();
+
+      if (reservation.status === 'confirmed') {
+        renderConfirmedSuccess(reservation);
+      } else if (reservation.status === 'expired' || reservation.status === 'cancelled') {
+        stopPaymentPolling();
+        showPaymentStatus(
+          'Essa pré-reserva expirou antes do pagamento ser confirmado. Escolha as datas de novo pra tentar outra vez.',
+          'error'
+        );
+        setPaymentMethodButtonsDisabled(true);
+      } else if (reservation.status === 'confirmed_conflict' || reservation.status === 'refunded') {
+        stopPaymentPolling();
+        showPaymentStatus(
+          'Essa data foi ocupada antes da confirmação do seu pagamento — o valor foi estornado automaticamente. Chame no Instagram que ajudamos a encontrar outra data.',
+          'error'
+        );
+        setPaymentMethodButtonsDisabled(true);
+      }
+      // 'pending' — pagamento ainda em análise, continua tentando.
+    } catch (err) {
+      // rede falhou nesse tick, tenta de novo no próximo.
+    }
+  }, PAYMENT_POLL_INTERVAL_MS);
+}
+
+async function startPixPayment(reservation) {
+  const panel = document.getElementById('paymentPanel');
+  if (!panel) return;
+  unmountCardBrick();
+  setPaymentMethodButtonsDisabled(true);
+  panel.hidden = false;
+  panel.innerHTML = '';
+  showPaymentStatus('Gerando código Pix...');
+
+  try {
+    const res = await fetch(`${API_BASE}/api/reservations/${reservation.id}/payments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ method: 'pix' }),
+    });
+    const body = await res.json();
+
+    if (!res.ok) {
+      showPaymentStatus(paymentErrorMessage(body), 'error');
+      setPaymentMethodButtonsDisabled(false);
+      return;
+    }
+
+    if (body.status === 'approved') {
+      renderConfirmedSuccess({ ...reservation, status: 'confirmed' });
+      return;
+    }
+
+    renderPixPanel(body, reservation);
+    pollPaymentStatus(reservation.id);
+  } catch (err) {
+    showPaymentStatus('Não consegui gerar o Pix agora. Tenta de novo em instantes.', 'error');
+    setPaymentMethodButtonsDisabled(false);
+  }
+}
+
+function renderPixPanel(payment, reservation) {
+  const panel = document.getElementById('paymentPanel');
+  if (!panel) return;
+
+  panel.innerHTML = `
+    <div class="pix-qr-wrap">
+      <img class="pix-qr" id="pixQrImg" alt="QR Code Pix">
+    </div>
+    <div class="pix-copy-row">
+      <input type="text" readonly id="pixCopyField">
+      <button type="button" class="btn btn-secondary" id="pixCopyBtn">Copiar código</button>
+    </div>
+  `;
+
+  // Via propriedade JS, não atributo — evita qualquer problema de escaping
+  // com o conteúdo do QR/base64.
+  const img = document.getElementById('pixQrImg');
+  if (img) img.src = `data:image/png;base64,${payment.qrCodeBase64}`;
+  const field = document.getElementById('pixCopyField');
+  if (field) field.value = payment.qrCode;
+
+  const copyBtn = document.getElementById('pixCopyBtn');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(payment.qrCode || '').then(() => {
+        const original = copyBtn.textContent;
+        copyBtn.textContent = 'Copiado!';
+        setTimeout(() => {
+          copyBtn.textContent = original;
+        }, 2000);
+      });
+    });
+  }
+
+  renderPaymentBackButton(reservation);
+  showPaymentStatus('Aguardando confirmação do pagamento...');
+}
+
+async function startCardPayment(reservation) {
+  const panel = document.getElementById('paymentPanel');
+  if (!panel) return;
+  stopPaymentPolling();
+  setPaymentMethodButtonsDisabled(true);
+  panel.hidden = false;
+  panel.innerHTML = '<div id="cardPaymentBrick"></div>';
+  showPaymentStatus('');
+
+  if (typeof MercadoPago === 'undefined') {
+    showPaymentStatus('Não consegui carregar o pagamento por cartão agora. Tenta de novo em instantes.', 'error');
+    setPaymentMethodButtonsDisabled(false);
+    return;
+  }
+
+  let brickReady = false;
+
+  try {
+    const mp = new MercadoPago(MP_PUBLIC_KEY, { locale: 'pt-BR' });
+    cardBrickController = await mp.bricks().create('cardPayment', 'cardPaymentBrick', {
+      initialization: { amount: reservation.totalCents / 100 },
+      customization: {
+        paymentMethods: { creditCard: 'all', debitCard: 'excluded' },
+      },
+      callbacks: {
+        onReady: () => {
+          brickReady = true;
+          setPaymentMethodButtonsDisabled(false);
+        },
+        onError: () => {
+          showPaymentStatus('Não consegui carregar o formulário de cartão. Tenta de novo em instantes.', 'error');
+          setPaymentMethodButtonsDisabled(false);
+        },
+        onSubmit: (cardFormData) => submitCardPayment(reservation, cardFormData),
+      },
+    });
+    renderPaymentBackButton(reservation);
+
+    // Rede de segurança: alguns modos de falha do SDK (chave inválida,
+    // iframe bloqueado) não disparam onReady nem onError — só logam no
+    // console e deixam o container vazio pra sempre. Sem isso os botões
+    // ficam travados e o hóspede não vê nenhuma mensagem.
+    setTimeout(() => {
+      const container = document.getElementById('cardPaymentBrick');
+      if (!brickReady && container && container.childElementCount === 0) {
+        showPaymentStatus('Não consegui carregar o formulário de cartão. Tenta de novo em instantes.', 'error');
+        setPaymentMethodButtonsDisabled(false);
+      }
+    }, 6000);
+  } catch (err) {
+    showPaymentStatus('Não consegui carregar o pagamento por cartão agora. Tenta de novo em instantes.', 'error');
+    setPaymentMethodButtonsDisabled(false);
+  }
+}
+
+async function submitCardPayment(reservation, cardFormData) {
+  showPaymentStatus('Processando pagamento...');
+
+  let res, body;
+  try {
+    res = await fetch(`${API_BASE}/api/reservations/${reservation.id}/payments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        method: 'credit_card',
+        token: cardFormData.token,
+        installments: cardFormData.installments,
+        paymentMethodId: cardFormData.payment_method_id,
+        issuerId: cardFormData.issuer_id,
+      }),
+    });
+    body = await res.json();
+  } catch (err) {
+    showPaymentStatus('Não consegui processar o pagamento agora. Tenta de novo em instantes.', 'error');
+    throw err;
+  }
+
+  if (!res.ok) {
+    showPaymentStatus(paymentErrorMessage(body), 'error');
+    throw new Error(body.error || 'falha_pagamento');
+  }
+
+  if (body.status === 'approved') {
+    renderConfirmedSuccess({ ...reservation, status: 'confirmed' });
+    return;
+  }
+
+  if (body.status === 'rejected') {
+    showPaymentStatus('Pagamento recusado. Confira os dados do cartão ou tente outro cartão.', 'error');
+    throw new Error('pagamento_recusado');
+  }
+
+  // in_process/pending/authorized — aguarda confirmação (webhook ou próximo poll).
+  showPaymentStatus('Pagamento em análise — aguardando confirmação...');
+  pollPaymentStatus(reservation.id);
 }
