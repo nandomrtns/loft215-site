@@ -278,21 +278,80 @@
   <div class="wrap">
     <p class="section-tag">Calendário</p>
     <h2>Escolha suas datas</h2>
-    <p class="lede">Disponibilidade combinada com o Airbnb, sincronizada automaticamente. Selecione a data de entrada e depois a de saída.</p>
-    <div class="cal-nav" id="calNav" hidden>
-      <button type="button" class="cal-nav-btn" id="calPrev" aria-label="Mês anterior">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-      </button>
-      <button type="button" class="cal-nav-btn" id="calNext" aria-label="Próximo mês">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-      </button>
-    </div>
-    <div class="cal-grid" id="calGrid">
-      <p class="cal-loading">Carregando disponibilidade...</p>
-    </div>
-    <p class="cal-updated" id="calUpdated"></p>
+    <p class="lede">Disponibilidade combinada com o Airbnb, sincronizada automaticamente.</p>
 
-    <div class="booking-summary" id="bookingSummary" hidden></div>
+    <div class="booking-widget" id="bookingWidget">
+      <p class="booking-widget-title" id="bookingWidgetTitle">Adicione datas para ver os preços</p>
+
+      <div class="booking-summary" id="bookingSummary" hidden></div>
+
+      <div class="booking-fields">
+        <button type="button" class="booking-field" id="fieldCheckIn" data-target="checkin">
+          <span class="booking-field-label">Check-in</span>
+          <span class="booking-field-value" id="checkInValue">Adicionar data</span>
+        </button>
+        <button type="button" class="booking-field" id="fieldCheckOut" data-target="checkout">
+          <span class="booking-field-label">Checkout</span>
+          <span class="booking-field-value" id="checkOutValue">Adicionar data</span>
+        </button>
+      </div>
+
+      <div class="booking-guests-wrap">
+        <button type="button" class="booking-guests-field" id="guestsField" aria-expanded="false">
+          <span class="booking-field-label">Hóspedes</span>
+          <span class="booking-field-value" id="guestsValue">1 hóspede</span>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="guests-popover" id="guestsPopover" hidden>
+          <div class="guests-row">
+            <span>Hóspedes</span>
+            <div class="stepper">
+              <button type="button" class="stepper-btn" id="guestsMinus" aria-label="Menos hóspedes">−</button>
+              <span id="guestsCount">1</span>
+              <button type="button" class="stepper-btn" id="guestsPlus" aria-label="Mais hóspedes">+</button>
+            </div>
+          </div>
+          <p class="guests-hint">Máximo de 3 hóspedes</p>
+        </div>
+      </div>
+
+      <button type="button" class="btn btn-primary booking-widget-cta" id="bookingWidgetCta">Conferir disponibilidade</button>
+      <p class="cal-updated" id="calUpdated"></p>
+    </div>
+
+    <div class="cal-modal-backdrop" id="calModalBackdrop" hidden></div>
+    <div class="cal-modal" id="calModal" hidden>
+      <h3>Selecionar datas</h3>
+      <p class="cal-modal-sub">Adicione suas datas de viagem para ver os preços exatos</p>
+
+      <div class="booking-fields booking-fields--modal">
+        <button type="button" class="booking-field" id="modalFieldCheckIn" data-target="checkin">
+          <span class="booking-field-label">Check-in</span>
+          <span class="booking-field-value" id="modalCheckInValue">DD/MM/AAAA</span>
+        </button>
+        <button type="button" class="booking-field" id="modalFieldCheckOut" data-target="checkout">
+          <span class="booking-field-label">Checkout</span>
+          <span class="booking-field-value" id="modalCheckOutValue">DD/MM/AAAA</span>
+        </button>
+      </div>
+
+      <div class="cal-months" id="calMonths">
+        <button type="button" class="cal-nav-btn cal-nav-btn--prev" id="calPrev" aria-label="Mês anterior">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <button type="button" class="cal-nav-btn cal-nav-btn--next" id="calNext" aria-label="Próximo mês">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+        <div class="cal-grid" id="calGrid">
+          <p class="cal-loading">Carregando disponibilidade...</p>
+        </div>
+      </div>
+
+      <div class="cal-modal-footer">
+        <button type="button" class="cal-link-btn" id="calClear">Limpar datas</button>
+        <button type="button" class="btn btn-secondary" id="calClose">Fechar</button>
+      </div>
+    </div>
 
     <form class="guest-form" id="guestForm" hidden>
       <div class="form-field">
@@ -309,19 +368,9 @@
           <input type="tel" id="guestPhone" name="guestPhone" required autocomplete="tel" placeholder="+55 51 99999-9999">
         </div>
       </div>
-      <div class="form-field two-up">
-        <div class="form-field">
-          <label for="guestDocument">CPF</label>
-          <input type="text" id="guestDocument" name="guestDocument" required inputmode="numeric" placeholder="000.000.000-00">
-        </div>
-        <div class="form-field">
-          <label for="guestCount">Hóspedes</label>
-          <select id="guestCount" name="guestCount" required>
-            <option value="1">1</option>
-            <option value="2" selected>2</option>
-            <option value="3">3</option>
-          </select>
-        </div>
+      <div class="form-field">
+        <label for="guestDocument">CPF</label>
+        <input type="text" id="guestDocument" name="guestDocument" required inputmode="numeric" placeholder="000.000.000-00">
       </div>
       <button type="submit" class="btn btn-primary">Solicitar reserva</button>
       <p class="booking-note" id="bookingNote" hidden></p>

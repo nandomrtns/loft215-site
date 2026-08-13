@@ -550,22 +550,178 @@ figcaption {
   .review-card { flex-basis: 260px; }
 }
 
-/* ---------- Disponibilidade ---------- */
+/* ---------- Disponibilidade — widget compacto (padrão Airbnb) ---------- */
 
-.cal-nav {
+.booking-widget {
+  margin-top: 32px;
+  max-width: 400px;
+  background: var(--cream);
+  border: 1px solid rgba(27,20,17,0.14);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(27,20,17,0.08);
+}
+
+.booking-widget-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 500;
+  margin-bottom: 18px;
+}
+
+.booking-fields {
+  display: flex;
+  border: 1px solid rgba(27,20,17,0.25);
+  border-radius: 10px 10px 0 0;
+  overflow: hidden;
+}
+
+.booking-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 14px;
+  text-align: left;
+  background: var(--cream);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-smooth);
+}
+.booking-field:first-child { border-right: 1px solid rgba(27,20,17,0.25); }
+.booking-field:hover { background: rgba(108,111,94,0.08); }
+.booking-field.active { background: rgba(108,111,94,0.12); }
+
+.booking-field-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(27,20,17,0.6);
+}
+
+.booking-field-value {
+  font-size: 14px;
+  color: var(--ink);
+}
+.booking-field-value.placeholder { color: rgba(27,20,17,0.4); }
+
+.booking-guests-wrap { position: relative; }
+
+.booking-guests-field {
+  width: 100%;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 32px;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid rgba(27,20,17,0.25);
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  background: var(--cream);
+  cursor: pointer;
+  text-align: left;
+  transition: background-color var(--dur-fast) var(--ease-smooth);
+}
+.booking-guests-field:hover { background: rgba(108,111,94,0.08); }
+.booking-guests-field .booking-field-label { flex: 0 0 auto; }
+.booking-guests-field .booking-field-value { flex: 1; }
+.booking-guests-field .chevron { width: 16px; height: 16px; color: rgba(27,20,17,0.5); transition: transform var(--dur-fast) var(--ease-smooth); }
+.booking-guests-field[aria-expanded="true"] .chevron { transform: rotate(180deg); }
+
+.guests-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  left: 0;
+  background: var(--cream);
+  border: 1px solid rgba(27,20,17,0.16);
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(27,20,17,0.14);
+  padding: 16px 18px;
+  z-index: 20;
+}
+
+.guests-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.stepper { display: flex; align-items: center; gap: 14px; }
+.stepper-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(27,20,17,0.3);
+  background: var(--cream);
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-smooth), opacity var(--dur-fast) var(--ease-smooth);
+}
+.stepper-btn:hover:not(:disabled) { background: rgba(108,111,94,0.12); border-color: var(--sage); }
+.stepper-btn:disabled { opacity: 0.3; cursor: default; }
+#guestsCount { min-width: 16px; text-align: center; font-weight: 700; }
+
+.guests-hint { margin-top: 10px; font-size: 12px; color: rgba(27,20,17,0.5); }
+
+.booking-widget-cta { width: 100%; justify-content: center; margin-top: 16px; }
+
+.booking-widget .cal-updated { margin-top: 14px; text-align: center; }
+
+/* ---------- Modal do calendário ---------- */
+
+.cal-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(27,20,17,0.4);
+  z-index: 90;
+}
+
+.cal-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 91;
+  width: min(680px, calc(100vw - 32px));
+  max-height: min(680px, calc(100vh - 48px));
+  overflow-y: auto;
+  background: var(--cream);
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 20px 60px rgba(27,20,17,0.28);
+}
+
+.cal-modal h3 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 500;
+}
+
+.cal-modal-sub {
+  font-size: 13.5px;
+  color: rgba(27,20,17,0.6);
+  margin-top: 4px;
+}
+
+.booking-fields--modal {
+  margin-top: 18px;
+  max-width: 380px;
+}
+
+.cal-months {
+  position: relative;
+  margin-top: 24px;
 }
 
 .cal-nav-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   border: 1px solid rgba(27,20,17,0.2);
   background: var(--cream);
@@ -576,21 +732,23 @@ figcaption {
 .cal-nav-btn:hover:not(:disabled) { background: rgba(108,111,94,0.12); border-color: var(--sage); }
 .cal-nav-btn:disabled { opacity: 0.3; cursor: default; }
 .cal-nav-btn svg { width: 16px; height: 16px; }
+.cal-nav-btn--prev { position: absolute; top: 0; left: 0; }
+.cal-nav-btn--next { position: absolute; top: 0; right: 0; }
 
 .cal-grid {
   display: flex;
-  flex-wrap: wrap;
-  gap: 40px;
-  margin-top: 16px;
+  gap: 32px;
+  overflow-x: auto;
 }
 
 .cal-loading { font-size: 14px; color: rgba(27,20,17,0.6); }
 
-.cal-month { flex: 1 1 260px; max-width: 320px; }
+.cal-month { flex: 1 1 260px; min-width: 240px; }
 .cal-month h4 {
   font-family: var(--font-display);
-  font-size: 19px;
+  font-size: 17px;
   font-weight: 500;
+  text-align: center;
   margin-bottom: 14px;
 }
 
@@ -617,7 +775,7 @@ figcaption {
   border-radius: 8px;
 }
 
-.cal-day.free { background: var(--cream-2); color: var(--ink); }
+.cal-day.free { background: transparent; color: var(--ink); }
 .cal-day.booked { background: transparent; color: rgba(27,20,17,0.32); text-decoration: line-through; }
 .cal-day.past { color: rgba(27,20,17,0.2); }
 .cal-day.empty { background: transparent; }
@@ -628,29 +786,53 @@ figcaption {
 }
 .cal-day.selectable:hover { background: rgba(108,111,94,0.16); }
 
-.cal-day.in-range { background: rgba(108,111,94,0.16); color: var(--ink); }
+.cal-day.in-range { background: rgba(108,111,94,0.16); color: var(--ink); border-radius: 0; }
 
 .cal-day.range-start,
 .cal-day.range-end {
   background: var(--sage);
   color: var(--cream);
   font-weight: 700;
+  border-radius: 50%;
+}
+
+.cal-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(27,20,17,0.12);
+}
+
+.cal-link-btn {
+  background: none;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: underline;
+  color: var(--ink);
+  cursor: pointer;
 }
 
 .cal-updated {
-  margin-top: 24px;
   font-size: 12px;
   color: rgba(27,20,17,0.5);
 }
 
-/* ---------- Reserva (widget de disponibilidade) ---------- */
+@media (max-width: 640px) {
+  .cal-modal { padding: 20px; }
+  .cal-nav-btn--prev, .cal-nav-btn--next { top: -4px; }
+}
+
+/* ---------- Reserva (resumo, formulário) ---------- */
 
 .booking-summary {
-  margin-top: 32px;
-  max-width: 420px;
+  margin-bottom: 18px;
   background: var(--cream-2);
   border-radius: 12px;
-  padding: 20px 24px;
+  padding: 16px 18px;
 }
 
 .booking-summary .row {

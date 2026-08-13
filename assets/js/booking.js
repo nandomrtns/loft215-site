@@ -1,22 +1,48 @@
-// Calendário interativo de disponibilidade + fluxo de pré-reserva.
-// O botão final só funciona com ?preview=1 na URL (uso interno) até a Fase 3
-// ligar o pagamento de verdade — ver booking-service para o motivo.
+// Widget de disponibilidade estilo Airbnb: card compacto (check-in/checkout/
+// hóspedes) que abre um modal com o calendário navegável ao clicar. O botão
+// final de reserva só funciona com ?preview=1 na URL (uso interno) até a
+// Fase 3 ligar o pagamento de verdade — ver booking-service para o motivo.
 
 const API_BASE = 'https://studio215-booking-production.up.railway.app';
 const PREVIEW_MODE = new URLSearchParams(window.location.search).has('preview');
 const MONTHS_SHOWN = 2;
 const MAX_MONTH_OFFSET = 10; // janela navegável de 12 meses (offset + MONTHS_SHOWN)
 const AVAILABILITY_WINDOW_DAYS = 380; // cobre a janela de 12 meses inteira numa fetch só
+const MAX_GUESTS = 3;
 const MONTH_NAMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const WEEKDAYS = ['D','S','T','Q','Q','S','S'];
 const RESERVATION_ID_KEY = 'studio215_reservation_id';
 
-const calNav = document.getElementById('calNav');
+const bookingWidget = document.getElementById('bookingWidget');
+const bookingWidgetTitle = document.getElementById('bookingWidgetTitle');
+const bookingWidgetCta = document.getElementById('bookingWidgetCta');
+const bookingSummary = document.getElementById('bookingSummary');
+
+const fieldCheckIn = document.getElementById('fieldCheckIn');
+const fieldCheckOut = document.getElementById('fieldCheckOut');
+const checkInValue = document.getElementById('checkInValue');
+const checkOutValue = document.getElementById('checkOutValue');
+
+const guestsField = document.getElementById('guestsField');
+const guestsValue = document.getElementById('guestsValue');
+const guestsPopover = document.getElementById('guestsPopover');
+const guestsCountEl = document.getElementById('guestsCount');
+const guestsMinus = document.getElementById('guestsMinus');
+const guestsPlus = document.getElementById('guestsPlus');
+
+const calModalBackdrop = document.getElementById('calModalBackdrop');
+const calModal = document.getElementById('calModal');
+const modalFieldCheckIn = document.getElementById('modalFieldCheckIn');
+const modalFieldCheckOut = document.getElementById('modalFieldCheckOut');
+const modalCheckInValue = document.getElementById('modalCheckInValue');
+const modalCheckOutValue = document.getElementById('modalCheckOutValue');
 const calPrevBtn = document.getElementById('calPrev');
 const calNextBtn = document.getElementById('calNext');
 const calGrid = document.getElementById('calGrid');
 const calUpdated = document.getElementById('calUpdated');
-const bookingSummary = document.getElementById('bookingSummary');
+const calClear = document.getElementById('calClear');
+const calClose = document.getElementById('calClose');
+
 const guestForm = document.getElementById('guestForm');
 const bookingNote = document.getElementById('bookingNote');
 const bookingError = document.getElementById('bookingError');
@@ -25,10 +51,12 @@ const bookingConfirmation = document.getElementById('bookingConfirmation');
 let blockedDays = new Set();
 let minNights = 2;
 let selection = { start: null, end: null };
+let guestCount = 1;
 let monthOffset = 0;
 
 if (calGrid) {
   initBooking();
+  wireStaticEvents();
 }
 
 async function initBooking() {
@@ -42,7 +70,6 @@ async function initBooking() {
 
     minNights = data.min_nights || 2;
     blockedDays = expandBlockedRanges(data.blocked_ranges || []);
-    if (calNav) calNav.hidden = false;
     renderCalendar();
 
     if (data.last_airbnb_sync && calUpdated) {
@@ -117,20 +144,138 @@ function hasBlockedDayInRange(start, end) {
   return false;
 }
 
-if (calPrevBtn) {
-  calPrevBtn.addEventListener('click', () => {
-    if (monthOffset === 0) return;
-    monthOffset -= 1;
-    renderCalendar();
+function formatDateBR(iso) {
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+}
+
+function formatBRL(cents) {
+  return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+// ---------- Widget compacto (fechado) ----------
+
+function wireStaticEvents() {
+  [fieldCheckIn, fieldCheckOut].forEach((el) => {
+    if (!el) return;
+    el.addEventListener('click', () => openModal(el.dataset.target));
+  });
+  if (bookingWidgetCta) bookingWidgetCta.addEventListener('click', () => openModal('checkin'));
+
+  if (guestsField) {
+    guestsField.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = !guestsPopover.hidden;
+      guestsPopover.hidden = isOpen;
+      guestsField.setAttribute('aria-expanded', String(!isOpen));
+    });
+  }
+  document.addEventListener('click', (e) => {
+    if (guestsPopover && !guestsPopover.hidden && !guestsPopover.contains(e.target) && e.target !== guestsField) {
+      guestsPopover.hidden = true;
+      guestsField.setAttribute('aria-expanded', 'false');
+    }
+  });
+  if (guestsMinus) guestsMinus.addEventListener('click', () => setGuestCount(guestCount - 1));
+  if (guestsPlus) guestsPlus.addEventListener('click', () => setGuestCount(guestCount + 1));
+
+  if (modalFieldCheckIn) {
+    modalFieldCheckIn.addEventListener('click', () => {
+      selection = { start: null, end: null };
+      hideBookingSteps();
+      renderCalendar();
+      syncFieldDisplays();
+    });
+  }
+  if (modalFieldCheckOut) {
+    modalFieldCheckOut.addEventListener('click', () => {
+      if (!selection.start) return;
+      selection.end = null;
+      hideBookingSteps();
+      renderCalendar();
+      syncFieldDisplays();
+    });
+  }
+
+  if (calPrevBtn) {
+    calPrevBtn.addEventListener('click', () => {
+      if (monthOffset === 0) return;
+      monthOffset -= 1;
+      renderCalendar();
+    });
+  }
+  if (calNextBtn) {
+    calNextBtn.addEventListener('click', () => {
+      if (monthOffset >= MAX_MONTH_OFFSET) return;
+      monthOffset += 1;
+      renderCalendar();
+    });
+  }
+
+  if (calClear) {
+    calClear.addEventListener('click', () => {
+      selection = { start: null, end: null };
+      hideBookingSteps();
+      renderCalendar();
+      syncFieldDisplays();
+    });
+  }
+  if (calClose) calClose.addEventListener('click', closeModal);
+  if (calModalBackdrop) calModalBackdrop.addEventListener('click', closeModal);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && calModal && !calModal.hidden) closeModal();
   });
 }
-if (calNextBtn) {
-  calNextBtn.addEventListener('click', () => {
-    if (monthOffset >= MAX_MONTH_OFFSET) return;
-    monthOffset += 1;
-    renderCalendar();
-  });
+
+function setGuestCount(next) {
+  guestCount = Math.min(MAX_GUESTS, Math.max(1, next));
+  guestsCountEl.textContent = String(guestCount);
+  guestsValue.textContent = `${guestCount} hóspede${guestCount > 1 ? 's' : ''}`;
+  guestsMinus.disabled = guestCount <= 1;
+  guestsPlus.disabled = guestCount >= MAX_GUESTS;
 }
+setGuestCount(1);
+
+function syncFieldDisplays() {
+  if (selection.start) {
+    checkInValue.textContent = formatDateBR(selection.start);
+    checkInValue.classList.remove('placeholder');
+    modalCheckInValue.textContent = formatDateBR(selection.start);
+  } else {
+    checkInValue.textContent = 'Adicionar data';
+    checkInValue.classList.add('placeholder');
+    modalCheckInValue.textContent = 'DD/MM/AAAA';
+  }
+
+  if (selection.end) {
+    checkOutValue.textContent = formatDateBR(selection.end);
+    checkOutValue.classList.remove('placeholder');
+    modalCheckOutValue.textContent = formatDateBR(selection.end);
+  } else {
+    checkOutValue.textContent = 'Adicionar data';
+    checkOutValue.classList.add('placeholder');
+    modalCheckOutValue.textContent = 'DD/MM/AAAA';
+  }
+
+  modalFieldCheckIn.classList.toggle('active', !selection.start);
+  modalFieldCheckOut.classList.toggle('active', !!selection.start && !selection.end);
+}
+
+// ---------- Modal ----------
+
+function openModal(target) {
+  if (calModalBackdrop) calModalBackdrop.hidden = false;
+  if (calModal) calModal.hidden = false;
+  renderCalendar();
+  syncFieldDisplays();
+}
+
+function closeModal() {
+  if (calModalBackdrop) calModalBackdrop.hidden = true;
+  if (calModal) calModal.hidden = true;
+}
+
+// ---------- Calendário ----------
 
 function renderCalendar() {
   const today = new Date();
@@ -187,6 +332,7 @@ function onDayClick(dateKey) {
     selection = { start: dateKey, end: null };
     renderCalendar();
     hideBookingSteps();
+    syncFieldDisplays();
     return;
   }
 
@@ -194,6 +340,7 @@ function onDayClick(dateKey) {
     showError('Essa faixa passa por uma data já ocupada. Escolha outro período.');
     selection = { start: dateKey, end: null };
     renderCalendar();
+    syncFieldDisplays();
     return;
   }
 
@@ -205,6 +352,7 @@ function onDayClick(dateKey) {
 
   selection.end = dateKey;
   renderCalendar();
+  syncFieldDisplays();
   loadQuote();
 }
 
@@ -220,17 +368,9 @@ async function loadQuote() {
   }
 }
 
-function formatBRL(cents) {
-  return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-}
-
-function formatDatePt(iso) {
-  const d = new Date(iso + 'T00:00:00');
-  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
-}
-
 function renderSummary(quote) {
   if (!bookingSummary) return;
+  if (bookingWidgetTitle) bookingWidgetTitle.hidden = true;
   bookingSummary.hidden = false;
   bookingSummary.innerHTML = `
     <div class="row"><span>${quote.nights} noite${quote.nights > 1 ? 's' : ''} × ${formatBRL(quote.nightlyRateCents)}</span><span>${formatBRL(quote.nightlyRateCents * quote.nights)}</span></div>
@@ -238,6 +378,7 @@ function renderSummary(quote) {
     <div class="row total"><span>Total</span><span>${formatBRL(quote.totalCents)}</span></div>
     <p class="policy-note">${quote.cancellationPolicy.summary}</p>
   `;
+  if (bookingWidgetCta) bookingWidgetCta.hidden = true;
 }
 
 function showGuestForm() {
@@ -258,6 +399,8 @@ function showGuestForm() {
 }
 
 function hideBookingSteps() {
+  if (bookingWidgetTitle) bookingWidgetTitle.hidden = false;
+  if (bookingWidgetCta) bookingWidgetCta.hidden = false;
   if (bookingSummary) bookingSummary.hidden = true;
   if (guestForm) guestForm.hidden = true;
   if (bookingNote) bookingNote.hidden = true;
@@ -315,7 +458,7 @@ if (guestForm) {
       guestEmail: guestForm.guestEmail.value.trim(),
       guestPhone: guestForm.guestPhone.value.trim(),
       guestDocument: guestForm.guestDocument.value.trim(),
-      guestCount: Number(guestForm.guestCount.value),
+      guestCount,
     };
 
     if (!isValidCpfClient(payload.guestDocument)) {
@@ -350,9 +493,9 @@ if (guestForm) {
 }
 
 function renderConfirmation(reservation) {
-  if (calNav) calNav.hidden = true;
+  closeModal();
+  if (bookingWidget) bookingWidget.hidden = true;
   if (guestForm) guestForm.hidden = true;
-  if (bookingSummary) bookingSummary.hidden = true;
   if (bookingNote) bookingNote.hidden = true;
   clearError();
 
@@ -362,7 +505,7 @@ function renderConfirmation(reservation) {
   bookingConfirmation.hidden = false;
   bookingConfirmation.innerHTML = `
     <h3>Pré-reserva feita</h3>
-    <p>${formatDatePt(reservation.checkIn)} — ${formatDatePt(reservation.checkOut)}</p>
+    <p>${formatDateBR(reservation.checkIn)} — ${formatDateBR(reservation.checkOut)}</p>
     <p>Total: ${formatBRL(reservation.totalCents)}</p>
     <p>${reservation.cancellationPolicy.summary}</p>
     <p>Sua pré-reserva fica guardada até ${expires.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.</p>
