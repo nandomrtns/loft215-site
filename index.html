@@ -405,6 +405,10 @@
 </div>
 
 <script src="https://sdk.mercadopago.com/js/v2"></script>
+<!-- Gera window.MP_DEVICE_SESSION_ID, o identificador do dispositivo que o
+     antifraude do Mercado Pago usa pra não recusar pagamento legítimo de
+     quem está num aparelho diferente do habitual. -->
+<script src="https://www.mercadopago.com/v2/security.js" view="checkout"></script>
 <script src="assets/js/main.js"></script>
 <script src="assets/js/booking.js"></script>
 </body>

@@ -514,6 +514,13 @@ if (guestForm) {
 
 // ---------- Pagamento (Fase 3) ----------
 
+// O security.js do Mercado Pago publica window.MP_DEVICE_SESSION_ID assim que
+// carrega. Pode não existir (bloqueador de anúncios, script lento) — nesse
+// caso o pagamento segue normalmente, só sem esse sinal de antifraude.
+function getDeviceId() {
+  return typeof window.MP_DEVICE_SESSION_ID === 'string' ? window.MP_DEVICE_SESSION_ID : undefined;
+}
+
 function paymentErrorMessage(body) {
   if (body.error === 'reserva_nao_pendente') return 'Essa pré-reserva não está mais disponível pra pagamento.';
   if (body.error === 'reserva_expirada') return 'Essa pré-reserva expirou. Escolha as datas de novo pra tentar outra vez.';
@@ -669,7 +676,7 @@ async function startPixPayment(reservation) {
     const res = await fetch(`${API_BASE}/api/reservations/${reservation.id}/payments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ method: 'pix' }),
+      body: JSON.stringify({ method: 'pix', deviceId: getDeviceId() }),
     });
     const body = await res.json();
 
@@ -799,6 +806,7 @@ async function submitCardPayment(reservation, cardFormData) {
         installments: cardFormData.installments,
         paymentMethodId: cardFormData.payment_method_id,
         issuerId: cardFormData.issuer_id,
+        deviceId: getDeviceId(),
       }),
     });
     body = await res.json();
